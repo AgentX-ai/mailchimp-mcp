@@ -1,6 +1,26 @@
 # Mailchimp MCP Server
 
+[![npm version](https://img.shields.io/npm/v/@agentx-ai/mailchimp-mcp-server)](https://www.npmjs.com/package/@agentx-ai/mailchimp-mcp-server)
+
 A Model Context Protocol (MCP) server that provides read-only access to Mailchimp's Marketing API for comprehensive email marketing data retrieval.
+
+## Usage
+
+The server can be used with any MCP client. Configure your client to use:
+
+```json
+{
+  "mcpServers": {
+    "mailchimp": {
+      "command": "npx",
+      "args": ["@agentx-ai/mailchimp-mcp-server"],
+      "env": {
+        "MAILCHIMP_API_KEY": "your-api-key-here"
+      }
+    }
+  }
+}
+```
 
 ## Features
 
@@ -94,7 +114,7 @@ This MCP server supports the following Mailchimp Marketing API endpoints (read-o
 - **List Merge Fields** - Get all merge fields in a specific list
 - **Get Merge Field** - Retrieve details of a specific merge field
 
-## Installation
+## Local Installation
 
 1. Clone this repository
 2. Install dependencies:
@@ -106,7 +126,7 @@ This MCP server supports the following Mailchimp Marketing API endpoints (read-o
    npm run build
    ```
 
-## Configuration
+### Configuration
 
 Set the following environment variable:
 
@@ -115,26 +135,6 @@ MAILCHIMP_API_KEY=your-mailchimp-api-key-here
 ```
 
 Your Mailchimp API key should include the data center suffix (e.g., `xxxxxxxxxxxxxxxx-us1`).
-
-## Usage
-
-### As an MCP Server
-
-The server can be used with any MCP client. Configure your client to use:
-
-```json
-{
-  "mcpServers": {
-    "mailchimp": {
-      "command": "node",
-      "args": ["path/to/mailchimp-mcp/build/index.js"],
-      "env": {
-        "MAILCHIMP_API_KEY": "your-api-key-here"
-      }
-    }
-  }
-}
-```
 
 ### Available Tools
 
