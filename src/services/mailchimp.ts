@@ -62,9 +62,45 @@ export class MailchimpService {
     return response.json() as Promise<T>;
   }
 
+  private async makePaginatedRequest<T = any>(
+    endpoint: string,
+    sortField: string = "create_time",
+    sortDirection: "ASC" | "DESC" = "DESC"
+  ): Promise<T> {
+    // Mailchimp API allows up to 1000 items per page
+    const params = new URLSearchParams({
+      count: "1000",
+      sort_field: sortField,
+      sort_dir: sortDirection,
+    });
+
+    const url = `${this.baseUrl}${endpoint}?${params.toString()}`;
+    const auth = Buffer.from(`anystring:${this.apiKey}`).toString("base64");
+
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Basic ${auth}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(
+        `Mailchimp API Error: ${response.status} ${response.statusText} - ${errorText}`
+      );
+    }
+
+    return response.json() as Promise<T>;
+  }
+
   // Automation Management
   async listAutomations(): Promise<{ automations: MailchimpAutomation[] }> {
-    return await this.makeRequest("/automations");
+    return await this.makePaginatedRequest(
+      "/automations",
+      "create_time",
+      "DESC"
+    );
   }
 
   async getAutomation(workflowId: string): Promise<MailchimpAutomation> {
@@ -75,7 +111,11 @@ export class MailchimpService {
   async listAutomationEmails(
     workflowId: string
   ): Promise<{ emails: MailchimpAutomationEmail[] }> {
-    return await this.makeRequest(`/automations/${workflowId}/emails`);
+    return await this.makePaginatedRequest(
+      `/automations/${workflowId}/emails`,
+      "send_time",
+      "DESC"
+    );
   }
 
   async getAutomationEmail(
@@ -92,8 +132,10 @@ export class MailchimpService {
     workflowId: string,
     emailId: string
   ): Promise<{ subscribers: MailchimpAutomationSubscriber[] }> {
-    return await this.makeRequest(
-      `/automations/${workflowId}/emails/${emailId}/queue`
+    return await this.makePaginatedRequest(
+      `/automations/${workflowId}/emails/${emailId}/queue`,
+      "timestamp_signup",
+      "DESC"
     );
   }
 
@@ -102,14 +144,16 @@ export class MailchimpService {
     workflowId: string,
     emailId: string
   ): Promise<{ queue: MailchimpAutomationQueue[] }> {
-    return await this.makeRequest(
-      `/automations/${workflowId}/emails/${emailId}/queue`
+    return await this.makePaginatedRequest(
+      `/automations/${workflowId}/emails/${emailId}/queue`,
+      "timestamp_signup",
+      "DESC"
     );
   }
 
   // List Management (for automation recipients)
   async listLists(): Promise<{ lists: MailchimpList[] }> {
-    return await this.makeRequest("/lists");
+    return await this.makePaginatedRequest("/lists", "date_created", "DESC");
   }
 
   async getList(listId: string): Promise<MailchimpList> {
@@ -143,7 +187,7 @@ export class MailchimpService {
 
   // Campaign Management
   async listCampaigns(): Promise<{ campaigns: MailchimpCampaign[] }> {
-    return await this.makeRequest("/campaigns");
+    return await this.makePaginatedRequest("/campaigns", "create_time", "DESC");
   }
 
   async getCampaign(campaignId: string): Promise<MailchimpCampaign> {
@@ -152,7 +196,11 @@ export class MailchimpService {
 
   // Member Management
   async listMembers(listId: string): Promise<{ members: MailchimpMember[] }> {
-    return await this.makeRequest(`/lists/${listId}/members`);
+    return await this.makePaginatedRequest(
+      `/lists/${listId}/members`,
+      "timestamp_signup",
+      "DESC"
+    );
   }
 
   async getMember(
@@ -166,7 +214,11 @@ export class MailchimpService {
   async listSegments(
     listId: string
   ): Promise<{ segments: MailchimpSegment[] }> {
-    return await this.makeRequest(`/lists/${listId}/segments`);
+    return await this.makePaginatedRequest(
+      `/lists/${listId}/segments`,
+      "created_at",
+      "DESC"
+    );
   }
 
   async getSegment(
@@ -178,7 +230,11 @@ export class MailchimpService {
 
   // Template Management
   async listTemplates(): Promise<{ templates: MailchimpTemplate[] }> {
-    return await this.makeRequest("/templates");
+    return await this.makePaginatedRequest(
+      "/templates",
+      "date_created",
+      "DESC"
+    );
   }
 
   async getTemplate(templateId: number): Promise<MailchimpTemplate> {
@@ -187,7 +243,7 @@ export class MailchimpService {
 
   // Campaign Reports
   async listCampaignReports(): Promise<{ reports: MailchimpCampaignReport[] }> {
-    return await this.makeRequest("/reports");
+    return await this.makePaginatedRequest("/reports", "send_time", "DESC");
   }
 
   async getCampaignReport(
@@ -203,7 +259,7 @@ export class MailchimpService {
 
   // Folder Management
   async listFolders(): Promise<{ folders: MailchimpFolder[] }> {
-    return await this.makeRequest("/campaign-folders");
+    return await this.makePaginatedRequest("/campaign-folders", "name", "ASC");
   }
 
   async getFolder(folderId: string): Promise<MailchimpFolder> {
@@ -212,7 +268,11 @@ export class MailchimpService {
 
   // File Manager
   async listFiles(): Promise<{ files: MailchimpFile[] }> {
-    return await this.makeRequest("/file-manager/files");
+    return await this.makePaginatedRequest(
+      "/file-manager/files",
+      "created_at",
+      "DESC"
+    );
   }
 
   async getFile(fileId: string): Promise<MailchimpFile> {
@@ -221,7 +281,11 @@ export class MailchimpService {
 
   // Landing Pages
   async listLandingPages(): Promise<{ landing_pages: MailchimpLandingPage[] }> {
-    return await this.makeRequest("/landing-pages");
+    return await this.makePaginatedRequest(
+      "/landing-pages",
+      "created_at",
+      "DESC"
+    );
   }
 
   async getLandingPage(pageId: string): Promise<MailchimpLandingPage> {
@@ -230,7 +294,11 @@ export class MailchimpService {
 
   // E-commerce Stores
   async listStores(): Promise<{ stores: MailchimpStore[] }> {
-    return await this.makeRequest("/ecommerce/stores");
+    return await this.makePaginatedRequest(
+      "/ecommerce/stores",
+      "created_at",
+      "DESC"
+    );
   }
 
   async getStore(storeId: string): Promise<MailchimpStore> {
@@ -241,7 +309,11 @@ export class MailchimpService {
   async listProducts(
     storeId: string
   ): Promise<{ products: MailchimpProduct[] }> {
-    return await this.makeRequest(`/ecommerce/stores/${storeId}/products`);
+    return await this.makePaginatedRequest(
+      `/ecommerce/stores/${storeId}/products`,
+      "created_at",
+      "DESC"
+    );
   }
 
   async getProduct(
@@ -255,7 +327,11 @@ export class MailchimpService {
 
   // E-commerce Orders
   async listOrders(storeId: string): Promise<{ orders: MailchimpOrder[] }> {
-    return await this.makeRequest(`/ecommerce/stores/${storeId}/orders`);
+    return await this.makePaginatedRequest(
+      `/ecommerce/stores/${storeId}/orders`,
+      "processed_at_foreign",
+      "DESC"
+    );
   }
 
   async getOrder(storeId: string, orderId: string): Promise<MailchimpOrder> {
@@ -268,7 +344,11 @@ export class MailchimpService {
   async listConversations(): Promise<{
     conversations: MailchimpConversation[];
   }> {
-    return await this.makeRequest("/conversations");
+    return await this.makePaginatedRequest(
+      "/conversations",
+      "timestamp",
+      "DESC"
+    );
   }
 
   async getConversation(
@@ -281,7 +361,11 @@ export class MailchimpService {
   async listMergeFields(
     listId: string
   ): Promise<{ merge_fields: MailchimpMergeField[] }> {
-    return await this.makeRequest(`/lists/${listId}/merge-fields`);
+    return await this.makePaginatedRequest(
+      `/lists/${listId}/merge-fields`,
+      "display_order",
+      "ASC"
+    );
   }
 
   async getMergeField(
@@ -295,7 +379,11 @@ export class MailchimpService {
 
   // Interest Categories
   async listInterestCategories(listId: string): Promise<any> {
-    return await this.makeRequest(`/lists/${listId}/interest-categories`);
+    return await this.makePaginatedRequest(
+      `/lists/${listId}/interest-categories`,
+      "display_order",
+      "ASC"
+    );
   }
 
   async getInterestCategory(listId: string, categoryId: string): Promise<any> {
@@ -306,8 +394,10 @@ export class MailchimpService {
 
   // Interests
   async listInterests(listId: string, categoryId: string): Promise<any> {
-    return await this.makeRequest(
-      `/lists/${listId}/interest-categories/${categoryId}/interests`
+    return await this.makePaginatedRequest(
+      `/lists/${listId}/interest-categories/${categoryId}/interests`,
+      "display_order",
+      "ASC"
     );
   }
 
@@ -323,7 +413,11 @@ export class MailchimpService {
 
   // Tags
   async listTags(listId: string): Promise<any> {
-    return await this.makeRequest(`/lists/${listId}/segments`);
+    return await this.makePaginatedRequest(
+      `/lists/${listId}/segments`,
+      "created_at",
+      "DESC"
+    );
   }
 
   async getTag(listId: string, tagId: number): Promise<any> {
@@ -332,7 +426,11 @@ export class MailchimpService {
 
   // Webhooks
   async listWebhooks(listId: string): Promise<any> {
-    return await this.makeRequest(`/lists/${listId}/webhooks`);
+    return await this.makePaginatedRequest(
+      `/lists/${listId}/webhooks`,
+      "created_at",
+      "DESC"
+    );
   }
 
   async getWebhook(listId: string, webhookId: string): Promise<any> {
@@ -361,8 +459,10 @@ export class MailchimpService {
 
   // Note Management
   async listMemberNotes(listId: string, subscriberHash: string): Promise<any> {
-    return await this.makeRequest(
-      `/lists/${listId}/members/${subscriberHash}/notes`
+    return await this.makePaginatedRequest(
+      `/lists/${listId}/members/${subscriberHash}/notes`,
+      "created_at",
+      "DESC"
     );
   }
 
@@ -378,8 +478,10 @@ export class MailchimpService {
 
   // Goal Management
   async listGoals(listId: string, subscriberHash: string): Promise<any> {
-    return await this.makeRequest(
-      `/lists/${listId}/members/${subscriberHash}/goals`
+    return await this.makePaginatedRequest(
+      `/lists/${listId}/members/${subscriberHash}/goals`,
+      "created_at",
+      "DESC"
     );
   }
 
@@ -465,7 +567,11 @@ export class MailchimpService {
 
   // E-commerce Customers
   async listCustomers(storeId: string): Promise<any> {
-    return await this.makeRequest(`/ecommerce/stores/${storeId}/customers`);
+    return await this.makePaginatedRequest(
+      `/ecommerce/stores/${storeId}/customers`,
+      "created_at",
+      "DESC"
+    );
   }
 
   async getCustomer(storeId: string, customerId: string): Promise<any> {
@@ -476,8 +582,10 @@ export class MailchimpService {
 
   // E-commerce Product Variants
   async listProductVariants(storeId: string, productId: string): Promise<any> {
-    return await this.makeRequest(
-      `/ecommerce/stores/${storeId}/products/${productId}/variants`
+    return await this.makePaginatedRequest(
+      `/ecommerce/stores/${storeId}/products/${productId}/variants`,
+      "created_at",
+      "DESC"
     );
   }
 
@@ -500,7 +608,11 @@ export class MailchimpService {
 
   // E-commerce Carts
   async listCarts(storeId: string): Promise<any> {
-    return await this.makeRequest(`/ecommerce/stores/${storeId}/carts`);
+    return await this.makePaginatedRequest(
+      `/ecommerce/stores/${storeId}/carts`,
+      "created_at",
+      "DESC"
+    );
   }
 
   async getCart(storeId: string, cartId: string): Promise<any> {
@@ -518,7 +630,11 @@ export class MailchimpService {
 
   // E-commerce Promo Rules
   async listPromoRules(storeId: string): Promise<any> {
-    return await this.makeRequest(`/ecommerce/stores/${storeId}/promo-rules`);
+    return await this.makePaginatedRequest(
+      `/ecommerce/stores/${storeId}/promo-rules`,
+      "created_at",
+      "DESC"
+    );
   }
 
   async getPromoRule(storeId: string, promoRuleId: string): Promise<any> {
@@ -529,8 +645,10 @@ export class MailchimpService {
 
   // E-commerce Promo Codes
   async listPromoCodes(storeId: string, promoRuleId: string): Promise<any> {
-    return await this.makeRequest(
-      `/ecommerce/stores/${storeId}/promo-rules/${promoRuleId}/promo-codes`
+    return await this.makePaginatedRequest(
+      `/ecommerce/stores/${storeId}/promo-rules/${promoRuleId}/promo-codes`,
+      "created_at",
+      "DESC"
     );
   }
 
