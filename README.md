@@ -2,6 +2,9 @@
 
 [![npm version](https://img.shields.io/npm/v/@agentx-ai/mailchimp-mcp-server)](https://www.npmjs.com/package/@agentx-ai/mailchimp-mcp-server)
 
+[![Watch the Notion Tutorial video](https://img.shields.io/badge/Watch_on-YouTube-red?logo=youtube&style=for-the-badge)](https://youtu.be/YcUrRAnFp8Q)
+[![Website](https://img.shields.io/badge/Website-🌐-purple)](https://www.agentx.so/mcp/mailchimp)
+
 A Model Context Protocol (MCP) server that provides read-only access to Mailchimp's Marketing API for comprehensive email marketing data retrieval.
 
 ## Usage
